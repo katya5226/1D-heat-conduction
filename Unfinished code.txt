@@ -1,0 +1,119 @@
+pi = 3.14159265
+
+length = 50  # /
+dx = 0.01  # m
+rho = 7900  # kg/m3
+cp = 470  # J/kgK
+k = 10  # W/mK
+h = 10  # W/m2K
+d = 7.85e-3  # m
+p = pi * d  # m
+a = pi * (d / 2) ** 2  # m2
+q = 0.75  # W
+q_in = q/a  # W/m2
+T_amb = 273 + 22.5  # K
+
+simulation_time = 5000  # s
+dt = 0.01  # s
+num_steps = round(simulation_time/dt)
+interval = 30000
+
+def thomas(a, b, c, z):
+    m = len(b)
+    U = [0 for k in range(0, m)]
+    L = [0 for k in range(1, m)]
+    U[0] = b[0]
+
+    for k in range(0, m - 1):
+        L[k] = a[k] / U[k]
+        U[k + 1] = b[k + 1] - L[k] * c[k]
+
+    y = [el for el in z]
+    for k in range(1, m):
+        y[k] = z[k] - L[k - 1] * y[k - 1]
+
+    x = [el for el in y]
+    x[m - 1] = x[m - 1] / U[m - 1]
+    for k in range(m - 2, -1, -1):
+        x[k] = (y[k] - c[k] * x[k + 1]) / U[k]
+    return x
+
+def print_temperatures(cvs_temps, x, time):
+    arr2 = [0] * (len(cvs_temps) + 1)
+    arr2[0] = round(time, x)
+    for k in range(1, len(cvs_temps) + 1):
+        arr2[k] = round(cvs_temps[k - 1], x)
+        k += 1
+    print(str(arr2))
+
+def print_as_exp(cvs_temps, x, time):
+    arr2 = [0] * (len(cvs_temps) + 1)
+    arr2[0] = round(time, x)
+    for k in range(1, len(cvs_temps) + 1):
+        arr2[k] = round(cvs_temps[k - 1], x)
+        k += 1
+    arr1 = [0, 0, 0, 0, 0, 0]
+    arr1[0] = round(time, x)
+    arr1[1] = round(arr2[5] - 273.0, x)
+    arr1[2] = round(arr2[10] - 273.0, x)
+    arr1[3] = round(arr2[15] - 273.0, x)
+    arr1[4] = round(arr2[20] - 273.0, x)
+    arr1[5] = round(arr2[30] - 273.0, x)
+
+    print(str(arr1))
+    
+def build_matrix():
+
+    underdiag = [0.0] * length
+    diag = [0.0] * length
+    upperdiag = [0.0] * length
+
+    # left boundary:
+    underdiag[0] = 0
+    diag[0] = rho * cp * dx ** 2 + k * dt + \
+              h * p/a * dx ** 2 * dt
+    upperdiag[0] = -k * dt
+
+    # right boundary:
+    underdiag[-1] = 
+    diag[-1] = 
+    upperdiag[-1] = 
+
+
+    # other control volumes:
+    for i in range(1, length - 1):
+        underdiag[i] = 
+        diag[i] = 
+        upperdiag[i] = 
+
+    return underdiag[1:], diag, upperdiag[:-1]
+
+def build_rhs(cvs_temps):
+    rhs = [0.0] * length
+    rhs[0] = (rho * cp * dx ** 2) * cvs_temps[0] + \
+             q_in * dx * dt + h * p/a * dx ** 2 * dt * T_amb
+    rhs[-1] = 
+              
+    for i in range(1, length - 1):
+        rhs[i] = 
+
+    return rhs
+
+
+new_temperatures = [0] * length
+cvs_temps = [295.0] * length
+
+time = 0.0
+
+print_temperatures(cvs_temps, 2, time)
+underdiag, diag, upperdiag = build_matrix()
+rhs = build_rhs(cvs_temps)
+
+for i in range(num_steps):
+    rhs = build_rhs(cvs_temps)
+    new_temperatures = thomas(underdiag, diag, upperdiag, rhs)
+    time += dt
+    for j in range(length):
+        cvs_temps[j] = new_temperatures[j]
+    if i % interval == 0:
+        print_as_exp(cvs_temps, 2, time)
